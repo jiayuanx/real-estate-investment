@@ -53,6 +53,7 @@ class HousingMarket(object):
             ptr = mkt_value / (12.0 * monthly_rent)
             self.price_to_rent = (ptr, ptr)
         elif price_to_rent is not None:
+            # original market value
             self.mkt_value = mkt_value or 5e5  # set default market value
             
         self.capital = self.mkt_value * downpayment
@@ -108,11 +109,14 @@ class HousingMarket(object):
         # cap_gain: appreciation
         # total_ret: appreciation + rental income
         cap_gain = (df.loc[df.index[-1], "market_value"]*(1-self.transaction_fee) # after agent fee
-                    -self.capital)*(1-self.capital_gain)
+                    -self.mkt_value)*(1-self.capital_gain) 
         cap_gain /= df.loc[df.index[-1], "discount_factor"]
         total_ret += cap_gain + self.capital
         total_ret /= self.capital
         
+        if total_ret < -1:
+            print("this lead to losing everything")
+            
         # total return, including appreciation and rent
         annualized_total_ret = total_ret**(1.0/self.years)-1
         
